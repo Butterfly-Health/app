@@ -10,6 +10,7 @@ import CoreData
 
 struct ContentView: View {
     @StateObject private var greetingViewModel = GreetingViewModel()
+    @State private var selectedTab: Int = 0
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -50,7 +51,7 @@ struct ContentView: View {
             Spacer()
 
             Button(action: {}) {
-                Image(systemName: "bell")
+                Image(systemName: "person.fill")
                     .font(.system(size: 18, weight: .regular))
                     .foregroundColor(.secondary)
             }
@@ -159,6 +160,44 @@ struct ContentView: View {
 //            SummaryRow(icon: "thermometer", tint: .pink, title: "Symptoms Logged", subtitle: "3 symptoms today", trailing: Text("3").font(.title2).fontWeight(.semibold).foregroundColor(.red))
 //            SummaryRow(icon: "leaf.fill", tint: .green, title: "Iodine Intake", subtitle: "Target: 150µg", trailing: Text("127µg").font(.title2).fontWeight(.bold).foregroundColor(.green))
         }
+    }
+
+    // MARK: - Recent Meals
+    private var recentMeals: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("Recent Meals").font(.title2).fontWeight(.semibold)
+                Spacer()
+                Button("View All") {}
+                    .font(.subheadline).foregroundColor(.blue)
+            }
+            MealRow(title: "Breakfast", subtitle: "Oatmeal with berries", trailing: "45µg iodine")
+            MealRow(title: "Lunch", subtitle: "Salmon salad", trailing: "82µg iodine")
+        }
+    }
+
+    // MARK: - Bottom Tab Bar
+    private var bottomTabBar: some View {
+        HStack {
+            TabBarItem(icon: "house.fill", label: "Home", isSelected: selectedTab == 0) {
+                selectedTab = 0
+            }
+            TabBarItem(icon: "chart.bar.fill", label: "Metrics", isSelected: selectedTab == 1) {
+                selectedTab = 1
+            }
+            TabBarItem(icon: "fork.knife", label: "Meals", isSelected: selectedTab == 2) {
+                selectedTab = 2
+            }
+            TabBarItem(icon: "heart.fill", label: "Symptoms", isSelected: selectedTab == 3) {
+                selectedTab = 3
+            }
+            TabBarItem(icon: "person.fill", label: "Profile", isSelected: selectedTab == 4) {
+                selectedTab = 4
+            }
+        }
+        .padding(.vertical, 8)
+        .background(Color(.systemBackground))
+        .overlay(Rectangle().fill(Color(.systemGray5)).frame(height: 0.5), alignment: .top)
     }
 }
 
@@ -293,6 +332,27 @@ private struct SimpleLineChart: View {
                         .position(points[i])
                 }
             }
+        }
+    }
+}
+
+private struct TabBarItem: View {
+    var icon: String
+    var label: String
+    var isSelected: Bool
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 22))
+                    .foregroundColor(isSelected ? .blue : .gray)
+                Text(label)
+                    .font(.caption2)
+                    .foregroundColor(isSelected ? .blue : .gray)
+            }
+            .frame(maxWidth: .infinity)
         }
     }
 }
