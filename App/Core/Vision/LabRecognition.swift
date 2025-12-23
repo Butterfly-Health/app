@@ -71,5 +71,34 @@ class LabRecognition {
         
         print(recognizedStrings)
     }
+    /// Process an image and return the first table detected.
+    @available(iOS 26.0, *)
+    private func extractTable(from image: Data) async throws -> DocumentObservation.Container.Table {
+
+
+        // The Vision request.
+        let request = RecognizeDocumentsRequest()
+
+
+        // Perform the request on the image data and return the results.
+        let observations = try await request.perform(on: image)
+
+
+        // Get the first observation from the array.
+        guard let document = observations.first?.document else {
+//            throw AppError.noDocument-
+        }
+
+
+        // Extract the first table detected.
+        guard let table = document.tables.first else {
+//            throw AppError.noTable
+        }
+
+
+        return table
+    }
+
+
 
 }
