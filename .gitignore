@@ -1,0 +1,130 @@
+# Images and Test Data
+lab-test-image.jpeg
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# Xcode User Data
+xcuserdata/
+*.xcuserdatad/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+# Build Products
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+
+# CocoaPods
+Pods/
+*.podspec
+Podfile.lock
+
+# Carthage
+Carthage/Build/
+Carthage/Checkouts/
+
+# Accio
+Dependencies/
+.accio/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Code Injection
+iOSInjectionProject/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Thumbnails
+Thumbs.db
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Database Files (GRDB)
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.db-shm
+*.db-wal
+
+# Environment Variables and Secrets
+.env
+.env.*
+secrets.swift
+Secrets.swift
+APIKeys.swift
+Config.xcconfig
+*.xcconfig
+
+# Backup files
+*~.nib
+*.swp
+*.bak
+*.backup
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Swift Playground
+*.playground
+
+# App Packaging
+*.ipa
+*.app.dSYM.zip
+
+# Provisioning
+*.mobileprovision
+*.provisionprofile
+
+# Certificates
+*.cer
+*.p12
+*.certSigningRequest
+
+# AppCode
+.idea/
+
+# VSCode
+.vscode/
+
+# Logs
+*.log
+
+# Temporary
+tmp/
+temp/
