@@ -9,16 +9,7 @@ import SwiftUI
 import PhotosUI
 
 struct PhotosView: View {
-    @State private var selectedPhotoType: PhotoType = .eyeDisease
-    @State private var todaysPhoto: UIImage?
-    @State private var showingImagePicker = false
-    @State private var showingCamera = false
-    @State private var selectedDate: String = "Dec 14"
-    @State private var overlayOpacity: Double = 0.5
-    @State private var notes: String = ""
-    @State private var selectedPhotoItem: PhotosPickerItem?
-
-    let availableDates = ["Dec 14", "Dec 13", "Dec 12", "Dec 11"]
+    @StateObject private var viewModel = PhotoViewModel()
 
     var body: some View {
         NavigationView {
@@ -57,11 +48,15 @@ struct PhotosView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingImagePicker) {
-                ImagePicker(image: $todaysPhoto, sourceType: .photoLibrary)
+            .sheet(isPresented: $viewModel.showingImagePicker) {
+                ImagePicker(image: $viewModel.todaysPhoto, sourceType: .photoLibrary, onImagePicked: { image in
+                    viewModel.saveCapturedPhoto(image)
+                })
             }
-            .sheet(isPresented: $showingCamera) {
-                ImagePicker(image: $todaysPhoto, sourceType: .camera)
+            .sheet(isPresented: $viewModel.showingCamera) {
+                ImagePicker(image: $viewModel.todaysPhoto, sourceType: .camera, onImagePicked: { image in
+                    viewModel.saveCapturedPhoto(image)
+                })
             }
         }
     }
@@ -77,17 +72,17 @@ struct PhotosView: View {
                 PhotoTypeButton(
                     icon: "eye.fill",
                     title: "Eye Disease",
-                    isSelected: selectedPhotoType == .eyeDisease
+                    isSelected: viewModel.selectedPhotoType == .eyeDisease
                 ) {
-                    selectedPhotoType = .eyeDisease
+                    viewModel.changePhotoType(to: .eyeDisease)
                 }
 
                 PhotoTypeButton(
                     icon: "figure.walk",
                     title: "Goiter",
-                    isSelected: selectedPhotoType == .goiter
+                    isSelected: viewModel.selectedPhotoType == .goiter
                 ) {
-                    selectedPhotoType = .goiter
+                    viewModel.changePhotoType(to: .goiter)
                 }
 
                 Spacer()
@@ -103,7 +98,7 @@ struct PhotosView: View {
                     .font(.title3)
                     .fontWeight(.semibold)
                 Spacer()
-                Text("Dec 15, 2024")
+                Text(Date().formatted(date: .abbreviated, time: .omitted))
                     .font(.subheadline)
                     .foregroundColor(.gray)
             }
@@ -113,7 +108,7 @@ struct PhotosView: View {
                     .fill(Color(.systemGray6))
                     .frame(height: 280)
 
-                if let photo = todaysPhoto {
+                if let photo = viewModel.todaysPhoto {
                     Image(uiImage: photo)
                         .resizable()
                         .scaledToFill()
@@ -131,12 +126,12 @@ struct PhotosView: View {
                 }
             }
             .onTapGesture {
-                showingCamera = true
+                viewModel.showingCamera = true
             }
 
             // Action Buttons
             HStack(spacing: 24) {
-                Button(action: { showingImagePicker = true }) {
+                Button(action: { viewModel.showingImagePicker = true }) {
                     Image(systemName: "photo")
                         .font(.system(size: 24))
                         .foregroundColor(.gray)
@@ -145,8 +140,7 @@ struct PhotosView: View {
                         .clipShape(Circle())
                 }
 
-                Button(action: { showingCamera = true }) {
-                    // Request photo
+                Button(action: { viewModel.showingCamera = true }) {
                     Image(systemName: "camera.fill")
                         .font(.system(size: 28))
                         .foregroundColor(.white)
@@ -186,15 +180,17 @@ struct PhotosView: View {
             // Date Selector
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    ForEach(availableDates, id: \.self) { date in
-                        Button(action: { selectedDate = date }) {
+                    ForEach(viewModel.availableDates, id: \.self) { date in
+                        Button(action: { 
+                            viewModel.selectComparisonDate(date)
+                        }) {
                             Text(date)
                                 .font(.subheadline)
                                 .fontWeight(.medium)
-                                .foregroundColor(selectedDate == date ? .white : .primary)
+                                .foregroundColor(viewModel.selectedDate == date ? .white : .primary)
                                 .padding(.horizontal, 20)
                                 .padding(.vertical, 12)
-                                .background(selectedDate == date ? Color.blue : Color(.systemGray6))
+                                .background(viewModel.selectedDate == date ? Color.blue : Color(.systemGray6))
                                 .cornerRadius(20)
                         }
                     }
@@ -209,15 +205,15 @@ struct PhotosView: View {
                     label: "Today",
                     backgroundColor: Color.green.opacity(0.1)
                 )
-                .opacity(1.0 - overlayOpacity)
+                .opacity(1.0 - viewModel.overlayOpacity)
                 
                 // Top layer - Selected date photo
                 ComparisonImageCard(
                     icon: "eye.fill",
-                    label: selectedDate,
+                    label: viewModel.selectedDate,
                     backgroundColor: Color.blue.opacity(0.1)
                 )
-                .opacity(overlayOpacity)
+                .opacity(viewModel.overlayOpacity)
             }
             .frame(height: 180)
 
@@ -227,7 +223,7 @@ struct PhotosView: View {
                     Text("Overlay")
                         .font(.subheadline)
                     Spacer()
-                    Text("\(Int(overlayOpacity * 100))%")
+                    Text("\(Int(viewModel.overlayOpacity * 100))%")
                         .font(.subheadline)
                         .foregroundColor(.gray)
                 }
@@ -237,9 +233,9 @@ struct PhotosView: View {
                         .font(.caption)
                         .foregroundColor(.green)
                     
-                    Slider(value: $overlayOpacity, in: 0...1)
+                    Slider(value: $viewModel.overlayOpacity, in: 0...1)
                     
-                    Text(selectedDate)
+                    Text(viewModel.selectedDate)
                         .font(.caption)
                         .foregroundColor(.blue)
                 }
@@ -267,8 +263,6 @@ struct PhotosView: View {
                     }
                 }
 
-                
-
                 Spacer()
             }
         }
@@ -281,14 +275,14 @@ struct PhotosView: View {
                 .font(.title3)
                 .fontWeight(.semibold)
 
-            TextEditor(text: $notes)
+            TextEditor(text: $viewModel.notes)
                 .frame(height: 100)
                 .padding(8)
                 .background(Color(.systemGray6))
                 .cornerRadius(8)
                 .overlay(
                     Group {
-                        if notes.isEmpty {
+                        if viewModel.notes.isEmpty {
                             Text("How are you feeling today? Any changes\nyou've noticed?")
                                 .foregroundColor(.gray)
                                 .font(.subheadline)
@@ -313,11 +307,7 @@ struct PhotosView: View {
     }
 }
 
-// MARK: - Photo Type Enum
-enum PhotoType {
-    case eyeDisease
-    case goiter
-}
+// MARK: - Photo Type Enum (Moved to PhotoModel.swift)
 
 // MARK: - Photo Type Button
 struct PhotoTypeButton: View {
@@ -393,6 +383,7 @@ struct TagButton: View {
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var image: UIImage?
     let sourceType: UIImagePickerController.SourceType
+    var onImagePicked: ((UIImage) -> Void)?
     @Environment(\.presentationMode) var presentationMode
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
@@ -418,6 +409,7 @@ struct ImagePicker: UIViewControllerRepresentable {
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
             if let image = info[.originalImage] as? UIImage {
                 parent.image = image
+                parent.onImagePicked?(image)
             }
             parent.presentationMode.wrappedValue.dismiss()
         }
