@@ -3,42 +3,43 @@ import Foundation
 import UIKit
 
 class DatabaseManager {
+    // Singleton pattern to disallow multiple creations of DBManager
     static let shared = DatabaseManager()
     
     var dbQueue: DatabaseQueue!
     
     private init() {
+        // Initialize database synchronously but safely
+        setupDatabase()
+    }
+    
+    private func setupDatabase() {
         do {
-            // Set up database connection
-            try DatabaseManager.setup()
+            let databaseURL = try FileManager.default
+                .url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+                .appendingPathComponent("db.sqlite")
+
+            dbQueue = try DatabaseQueue(path: databaseURL.path)
             
             // Setup schema
-            try DatabaseManager.defineSchema()
+            try defineSchema()
             
         } catch {
             fatalError("Failed to initialize database: \(error)")
         }
     }
     
-    static func setup() throws {
-        let databaseURL = try FileManager.default
-            .url(for: .applicationDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            .appendingPathComponent("db.sqlite")
-
-        shared.dbQueue = try DatabaseQueue(path: databaseURL.path)
-    }
-    
-    static func defineSchema() throws {
-        try shared.dbQueue.write { db in
+    private func defineSchema() throws {
+        try dbQueue.write { db in
             // Conditions table
-            try db.create(table: "conditions") { t in
+            try db.create(table: "conditions", ifNotExists: true) { t in
                 t.autoIncrementedPrimaryKey("id")
                 t.column("name", .text).notNull().unique()
                 t.column("slug", .text).notNull().unique()
             }
             
             // Symptom definitions table
-            try db.create(table: "symptom_definitions") { t in
+            try db.create(table: "symptom_definitions", ifNotExists: true) { t in
                 t.autoIncrementedPrimaryKey("id")
                 t.column("name", .text).notNull().unique()
                 t.column("slug", .text).notNull().unique()
@@ -50,7 +51,7 @@ class DatabaseManager {
             }
             
             // Lab definitions table
-            try db.create(table: "lab_definitions") { t in
+            try db.create(table: "lab_definitions", ifNotExists: true) { t in
                 t.autoIncrementedPrimaryKey("id")
                 t.column("name", .text).notNull().unique()
                 t.column("slug", .text).notNull().unique()
@@ -60,7 +61,7 @@ class DatabaseManager {
             }
             
             // Symptom entries table
-            try db.create(table: "symptom_entries") { t in
+            try db.create(table: "symptom_entries", ifNotExists: true) { t in
                 t.autoIncrementedPrimaryKey("id")
                 t.column("user_id", .integer).notNull()
                 t.column("symptom_id", .integer).references("symptom_definitions", onDelete: .setNull)
@@ -72,7 +73,7 @@ class DatabaseManager {
             }
             
             // Lab entries table
-            try db.create(table: "lab_entries") { t in
+            try db.create(table: "lab_entries", ifNotExists: true) { t in
                 t.autoIncrementedPrimaryKey("id")
                 t.column("user_id", .integer).notNull()
                 t.column("lab_id", .integer).references("lab_definitions", onDelete: .setNull)
@@ -85,7 +86,7 @@ class DatabaseManager {
             }
             
             // Photos table
-            try db.create(table: "photos") { t in
+            try db.create(table: "photos", ifNotExists: true) { t in
                 t.autoIncrementedPrimaryKey("id")
                 t.column("user_id", .integer).notNull()
                 t.column("r2_path", .text).notNull()
@@ -95,20 +96,130 @@ class DatabaseManager {
             }
             
             // Create indexes
-            try db.create(index: "idx_symptom_definitions_id", on: "symptom_definitions", columns: ["id"])
-            try db.create(index: "idx_conditions_id", on: "conditions", columns: ["id"])
-            try db.create(index: "idx_symptom_entries_id", on: "symptom_entries", columns: ["id"])
-            try db.create(index: "idx_symptom_entries_user_id", on: "symptom_entries", columns: ["user_id"])
-            try db.create(index: "idx_symptom_entries_symptom_id", on: "symptom_entries", columns: ["symptom_id"])
-            try db.create(index: "idx_symptom_entries_symptom_name", on: "symptom_entries", columns: ["symptom_name"])
-            try db.create(index: "idx_symptom_entries_recorded_at", on: "symptom_entries", columns: ["recorded_at"])
-            try db.create(index: "idx_lab_entries_id", on: "lab_entries", columns: ["id"])
-            try db.create(index: "idx_lab_entries_user_id", on: "lab_entries", columns: ["user_id"])
-            try db.create(index: "idx_lab_entries_lab_name", on: "lab_entries", columns: ["lab_name"])
-            try db.create(index: "idx_lab_entries_recorded_at", on: "lab_entries", columns: ["recorded_at"])
-            try db.create(index: "idx_lab_definitions_id", on: "lab_definitions", columns: ["id"])
-            try db.create(index: "idx_photos_recorded_at", on: "photos", columns: ["recorded_at"])
-            try db.create(index: "idx_photos_user_id", on: "photos", columns: ["user_id"])
+            try db.create(index: "idx_symptom_definitions_id", on: "symptom_definitions", columns: ["id"], ifNotExists: true)
+            try db.create(index: "idx_conditions_id", on: "conditions", columns: ["id"], ifNotExists: true)
+            try db.create(index: "idx_symptom_entries_id", on: "symptom_entries", columns: ["id"], ifNotExists: true)
+            try db.create(index: "idx_symptom_entries_user_id", on: "symptom_entries", columns: ["user_id"], ifNotExists: true)
+            try db.create(index: "idx_symptom_entries_symptom_id", on: "symptom_entries", columns: ["symptom_id"], ifNotExists: true)
+            try db.create(index: "idx_symptom_entries_symptom_name", on: "symptom_entries", columns: ["symptom_name"], ifNotExists: true)
+            try db.create(index: "idx_symptom_entries_recorded_at", on: "symptom_entries", columns: ["recorded_at"], ifNotExists: true)
+            try db.create(index: "idx_lab_entries_id", on: "lab_entries", columns: ["id"], ifNotExists: true)
+            try db.create(index: "idx_lab_entries_user_id", on: "lab_entries", columns: ["user_id"], ifNotExists: true)
+            try db.create(index: "idx_lab_entries_lab_name", on: "lab_entries", columns: ["lab_name"], ifNotExists: true)
+            try db.create(index: "idx_lab_entries_recorded_at", on: "lab_entries", columns: ["recorded_at"], ifNotExists: true)
+            try db.create(index: "idx_lab_definitions_id", on: "lab_definitions", columns: ["id"], ifNotExists: true)
+            try db.create(index: "idx_photos_recorded_at", on: "photos", columns: ["recorded_at"], ifNotExists: true)
+            try db.create(index: "idx_photos_user_id", on: "photos", columns: ["user_id"], ifNotExists: true)
+        }
+    }
+    
+    // MARK: - Symptom Entry Methods
+    
+    func insertSymptomEntry(_ entry: SymptomEntry) throws {
+        try dbQueue.write { db in
+            var mutableEntry = entry
+            try mutableEntry.insert(db)
+        }
+    }
+    
+    func fetchSymptomEntries(userId: Int64, startDate: Date, endDate: Date) throws -> [SymptomEntry] {
+        try dbQueue.read { db in
+            try SymptomEntry
+                .filter(Column("user_id") == userId)
+                .filter(Column("recorded_at") >= startDate)
+                .filter(Column("recorded_at") < endDate)
+                .order(Column("recorded_at").desc)
+                .fetchAll(db)
+        }
+    }
+    
+    func deleteSymptomEntries(userId: Int64, date: Date) throws {
+        let startOfDay = Calendar.current.startOfDay(for: date)
+        let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
+        
+        try dbQueue.write { db in
+            try SymptomEntry
+                .filter(Column("user_id") == userId)
+                .filter(Column("recorded_at") >= startOfDay)
+                .filter(Column("recorded_at") < endOfDay)
+                .deleteAll(db)
+        }
+    }
+    
+    func fetchSymptomEntry(id: Int64) throws -> SymptomEntry? {
+        try dbQueue.read { db in
+            try SymptomEntry.fetchOne(db, key: id)
+        }
+    }
+    
+    // MARK: - Photo Entry Methods
+    
+    func insertPhotoEntry(_ entry: PhotoEntry) throws {
+        try dbQueue.write { db in
+            var mutableEntry = entry
+            try mutableEntry.insert(db)
+        }
+    }
+    
+    func fetchPhotoEntries(userId: Int64, purpose: String? = nil, startDate: Date, endDate: Date) throws -> [PhotoEntry] {
+        try dbQueue.read { db in
+            var request = PhotoEntry
+                .filter(Column("user_id") == userId)
+                .filter(Column("recorded_at") >= startDate)
+                .filter(Column("recorded_at") < endDate)
+            
+            if let purpose = purpose {
+                request = request.filter(Column("purpose") == purpose)
+            }
+            
+            return try request
+                .order(Column("recorded_at").desc)
+                .fetchAll(db)
+        }
+    }
+    
+    func fetchPhotoEntry(id: Int64) throws -> PhotoEntry? {
+        try dbQueue.read { db in
+            try PhotoEntry.fetchOne(db, key: id)
+        }
+    }
+    
+    func deletePhotoEntry(id: Int64) throws {
+        try dbQueue.write { db in
+            try PhotoEntry.deleteOne(db, key: id)
+        }
+    }
+    
+    func fetchAllPhotosForUser(userId: Int64) throws -> [PhotoEntry] {
+        try dbQueue.read { db in
+            try PhotoEntry
+                .filter(Column("user_id") == userId)
+                .order(Column("recorded_at").desc)
+                .fetchAll(db)
+        }
+    }
+    
+    // MARK: - Symptom Definition Methods
+    
+    func fetchSymptomDefinitions() throws -> [SymptomDefinition] {
+        try dbQueue.read { db in
+            try SymptomDefinition
+                .order(Column("category"), Column("name"))
+                .fetchAll(db)
+        }
+    }
+    
+    func fetchSymptomDefinition(id: Int64) throws -> SymptomDefinition? {
+        try dbQueue.read { db in
+            try SymptomDefinition.fetchOne(db, key: id)
+        }
+    }
+    
+    func fetchSymptomDefinitionByName(_ name: String) throws -> SymptomDefinition? {
+        try dbQueue.read { db in
+            try SymptomDefinition
+                .filter(Column("name") == name)
+                .fetchOne(db)
         }
     }
 }
