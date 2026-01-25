@@ -11,6 +11,8 @@ import GRDB
 // MARK: - Symptom Definition (GRDB Model)
 
 struct SymptomDefinition: Codable, Identifiable, FetchableRecord, PersistableRecord {
+    static let databaseTableName = "symptom_definitions"
+    
     var id: Int64?
     var name: String
     var slug: String
@@ -46,6 +48,8 @@ struct SymptomDefinition: Codable, Identifiable, FetchableRecord, PersistableRec
 // MARK: - Symptom Entry (GRDB Model)
 
 struct SymptomEntry: Codable, Identifiable, FetchableRecord, PersistableRecord {
+    static let databaseTableName = "symptom_entries"
+    
     var id: Int64?
     var userId: Int64
     var symptomId: Int64?

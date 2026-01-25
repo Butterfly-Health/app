@@ -11,6 +11,7 @@ struct SymptomSelectorView: View {
     @Environment(\.dismiss) var dismiss
     @Binding var availableSymptoms: [String: [String]]
     @Binding var chosenSymptoms: [String: Double]
+    @ObservedObject var viewModel: SymptomsViewModel
     
     @State private var searchText = ""
     @State private var expandedCategories: Set<String> = []
@@ -83,6 +84,9 @@ struct SymptomSelectorView: View {
                                                 availableSymptoms["Custom"] = [searchText]
                                             }
                                             chosenSymptoms[searchText] = 5
+                                            
+                                            // Save to database
+                                            viewModel.createCustomSymptomDefinition(name: searchText, category: "Custom")
                                         } else {
                                             chosenSymptoms.removeValue(forKey: searchText)
                                         }

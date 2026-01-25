@@ -222,5 +222,25 @@ class DatabaseManager {
                 .fetchOne(db)
         }
     }
+    
+    func insertSymptomDefinition(_ definition: SymptomDefinition) throws {
+        try dbQueue.write { db in
+            var mutableDefinition = definition
+            try mutableDefinition.insert(db)
+        }
+    }
+    
+    func getOrCreateCustomCondition() throws -> Int64 {
+        try dbQueue.write { db in
+            // Check if "Custom" condition exists
+            if let existingCondition = try Row.fetchOne(db, sql: "SELECT id FROM conditions WHERE slug = ?", arguments: ["custom"]) {
+                return existingCondition["id"]
+            }
+            
+            // Create it if it doesn't exist
+            try db.execute(sql: "INSERT INTO conditions (name, slug) VALUES (?, ?)", arguments: ["Custom", "custom"])
+            return db.lastInsertedRowID
+        }
+    }
 }
 

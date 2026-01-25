@@ -77,7 +77,8 @@ struct SymptomsLoggingView: View {
                     .sheet(isPresented: $viewModel.showingSymptomSelector) {
                         SymptomSelectorView(
                             availableSymptoms: $viewModel.availableSymptoms,
-                            chosenSymptoms: $viewModel.chosenSymptoms
+                            chosenSymptoms: $viewModel.chosenSymptoms,
+                            viewModel: viewModel
                         )
                     }
 

@@ -134,4 +134,37 @@ class SymptomsViewModel: ObservableObject {
             return []
         }
     }
+    
+    func createCustomSymptomDefinition(name: String, category: String = "Custom") {
+        do {
+            // Check if symptom definition already exists
+            if let _ = try dbManager.fetchSymptomDefinitionByName(name) {
+                print("Symptom definition '\(name)' already exists")
+                return
+            }
+            
+            // Get or create the custom condition
+            let conditionId = try dbManager.getOrCreateCustomCondition()
+            
+            // Create slug from name (lowercase, replace spaces with hyphens)
+            let slug = name.lowercased().replacingOccurrences(of: " ", with: "-")
+            
+            // Create and insert the symptom definition
+            let definition = SymptomDefinition(
+                name: name,
+                slug: slug,
+                description: "Custom symptom added by user",
+                category: category,
+                condition: "Custom",
+                conditionId: conditionId
+            )
+            
+            try dbManager.insertSymptomDefinition(definition)
+            print("Successfully created symptom definition for '\(name)'")
+            
+        } catch {
+            errorMessage = "Failed to create custom symptom: \(error.localizedDescription)"
+            print("Error creating custom symptom: \(error)")
+        }
+    }
 }
