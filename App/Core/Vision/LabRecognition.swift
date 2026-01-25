@@ -86,13 +86,13 @@ class LabRecognition {
 
         // Get the first observation from the array.
         guard let document = observations.first?.document else {
-//            throw AppError.noDocument-
+            throw AppError.noDocument
         }
 
 
         // Extract the first table detected.
         guard let table = document.tables.first else {
-//            throw AppError.noTable
+            throw AppError.noTable
         }
 
 
