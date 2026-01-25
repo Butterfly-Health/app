@@ -12,9 +12,12 @@ import UIKit
 // MARK: - Photo Entry (GRDB Model)
 
 struct PhotoEntry: Codable, Identifiable, FetchableRecord, PersistableRecord {
+    static let databaseTableName = "photos"
+    
     var id: Int64?
     var userId: Int64
     var r2Path: String
+    var localPath: String?
     var purpose: String?
     var recordedAt: Date
     var hash: String?
@@ -23,6 +26,7 @@ struct PhotoEntry: Codable, Identifiable, FetchableRecord, PersistableRecord {
         static let id = Column(CodingKeys.id)
         static let userId = Column(CodingKeys.userId)
         static let r2Path = Column(CodingKeys.r2Path)
+        static let localPath = Column(CodingKeys.localPath)
         static let purpose = Column(CodingKeys.purpose)
         static let recordedAt = Column(CodingKeys.recordedAt)
         static let hash = Column(CodingKeys.hash)
@@ -32,15 +36,17 @@ struct PhotoEntry: Codable, Identifiable, FetchableRecord, PersistableRecord {
         case id
         case userId = "user_id"
         case r2Path = "r2_path"
+        case localPath = "local_path"
         case purpose
         case recordedAt = "recorded_at"
         case hash
     }
     
-    init(id: Int64? = nil, userId: Int64, r2Path: String, purpose: String? = nil, recordedAt: Date = Date(), hash: String? = nil) {
+    init(id: Int64? = nil, userId: Int64, r2Path: String, localPath: String? = nil, purpose: String? = nil, recordedAt: Date = Date(), hash: String? = nil) {
         self.id = id
         self.userId = userId
         self.r2Path = r2Path
+        self.localPath = localPath
         self.purpose = purpose
         self.recordedAt = recordedAt
         self.hash = hash

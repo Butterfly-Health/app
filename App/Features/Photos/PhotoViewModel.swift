@@ -58,8 +58,10 @@ class PhotoViewModel: ObservableObject {
             
             if let entry = entries.first {
                 todaysPhotoEntry = entry
-                // TODO: Load actual image from R2 path
-                // For now, we'll rely on the user capturing a new photo
+                // Load image from local path if available
+                if let localPath = entry.localPath {
+                    todaysPhoto = loadImageFromLocalPath(localPath)
+                }
             }
         } catch {
             errorMessage = "Failed to load today's photo: \(error.localizedDescription)"
@@ -121,12 +123,16 @@ class PhotoViewModel: ObservableObject {
     
     func saveCapturedPhoto(_ image: UIImage) {
         do {
+            // Save image to local storage
+            let localPath = try saveImageToLocalStorage(image)
+            
             // TODO: Upload image to R2 storage and get path
             let r2Path = "temp/\(UUID().uuidString).jpg" // Placeholder
             
             let photoEntry = PhotoEntry(
                 userId: currentUserId,
                 r2Path: r2Path,
+                localPath: localPath,
                 purpose: selectedPhotoType.rawValue,
                 recordedAt: Date()
             )
@@ -139,12 +145,51 @@ class PhotoViewModel: ObservableObject {
             // Reload available dates
             loadAvailableDates()
             
-            print("Successfully saved photo")
+            print("Successfully saved photo to local path: \(localPath)")
             
         } catch {
             errorMessage = "Failed to save photo: \(error.localizedDescription)"
             print("Error saving photo: \(error)")
         }
+    }
+    
+    // MARK: - Local Storage Methods
+    
+    private func saveImageToLocalStorage(_ image: UIImage) throws -> String {
+        // Get the documents directory
+        guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            throw NSError(domain: "PhotoViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "Could not access documents directory"])
+        }
+        
+        // Create photos directory if it doesn't exist
+        let photosDirectory = documentsDirectory.appendingPathComponent("photos")
+        if !FileManager.default.fileExists(atPath: photosDirectory.path) {
+            try FileManager.default.createDirectory(at: photosDirectory, withIntermediateDirectories: true)
+        }
+        
+        // Create a unique filename with timestamp and photo type
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyyMMdd_HHmmss"
+        let timestamp = dateFormatter.string(from: Date())
+        let filename = "\(selectedPhotoType.rawValue)_\(timestamp).jpg"
+        let fileURL = photosDirectory.appendingPathComponent(filename)
+        
+        // Convert image to JPEG data and save
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            throw NSError(domain: "PhotoViewModel", code: 2, userInfo: [NSLocalizedDescriptionKey: "Could not convert image to JPEG"])
+        }
+        
+        try imageData.write(to: fileURL)
+        
+        return fileURL.path
+    }
+    
+    func loadImageFromLocalPath(_ path: String) -> UIImage? {
+        guard FileManager.default.fileExists(atPath: path) else {
+            print("Image file not found at path: \(path)")
+            return nil
+        }
+        return UIImage(contentsOfFile: path)
     }
     
     func deletePhoto(_ photoEntry: PhotoEntry) {

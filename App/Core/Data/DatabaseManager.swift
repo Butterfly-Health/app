@@ -90,6 +90,7 @@ class DatabaseManager {
                 t.autoIncrementedPrimaryKey("id")
                 t.column("user_id", .integer).notNull()
                 t.column("r2_path", .text).notNull()
+                t.column("local_path", .text)
                 t.column("purpose", .text)
                 t.column("recorded_at", .datetime).notNull().defaults(sql: "CURRENT_TIMESTAMP")
                 t.column("hash", .text)
